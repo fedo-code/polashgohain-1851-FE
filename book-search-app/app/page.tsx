@@ -10,14 +10,16 @@ interface Book {
 }
 
 export default function BookExplorer() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch books
+  // Fetch books from API
   const fetchBooks = async (searchText: string) => {
     if (!searchText.trim()) {
-      setBooks([]);
+      setAllBooks([]);
+      setFilteredBooks([]);
       return;
     }
 
@@ -28,12 +30,36 @@ export default function BookExplorer() {
         `https://openlibrary.org/search.json?q=${encodeURIComponent(searchText)}`
       );
       const data = await res.json();
-      setBooks(data.docs || []);
+      const results = data.docs || [];
+      setAllBooks(results);
+      setFilteredBooks(results); // Initially show all results
     } catch (err) {
       console.error("Error fetching books:", err);
-      setBooks([]);
+      setAllBooks([]);
+      setFilteredBooks([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Client-side filtering based on title
+  const handleSearch = (searchText: string) => {
+    setQuery(searchText);
+    
+    if (!searchText.trim()) {
+      fetchBooks(searchText);
+      return;
+    }
+
+    // If we have allBooks, filter them client-side
+    if (allBooks.length > 0) {
+      const filtered = allBooks.filter((book) =>
+        book.title.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredBooks(filtered);
+    } else {
+      // First time search - fetch from API
+      fetchBooks(searchText);
     }
   };
 
@@ -51,8 +77,7 @@ export default function BookExplorer() {
             placeholder="Search books..."
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
-              fetchBooks(e.target.value);
+              handleSearch(e.target.value);
             }}
             className="w-full px-5 py-3 pl-11 text-base rounded-xl border border-gray-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition"
           />
@@ -61,7 +86,8 @@ export default function BookExplorer() {
             <button
               onClick={() => {
                 setQuery("");
-                setBooks([]);
+                setAllBooks([]);
+                setFilteredBooks([]);
               }}
               className="absolute right-4 top-3 text-gray-400 hover:text-black text-lg"
             >
@@ -74,7 +100,21 @@ export default function BookExplorer() {
       {/* Result Count */}
       {query && (
         <p className="text-center mt-4 text-gray-500">
-          Showing {books.length} results for "{query}"
+          Showing {filteredBooks.length} results for "{query}"
+        </p>
+      )}
+
+      {/* Empty State */}
+      {query && filteredBooks.length === 0 && !loading && (
+        <p className="text-center mt-8 text-gray-500">
+          No books found. Try another title.
+        </p>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <p className="text-center mt-8 text-gray-500">
+          Loading...
         </p>
       )}
 
@@ -82,7 +122,7 @@ export default function BookExplorer() {
       <div className="flex justify-center px-4 mt-24">
         <div className="w-full max-w-7xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {books.map((book) => (
+            {filteredBooks.map((book) => (
               <div
                 key={book.key}
                 className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:scale-105 hover:border-gray-300 transition-all duration-300 p-4 cursor-pointer"
@@ -99,7 +139,7 @@ export default function BookExplorer() {
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400 text-sm">📅</span>
                   <p className="text-xs text-gray-600">
-                    {book.first_publish_year || "Not available"}
+                    {book.first_publish_year || "Year not available"}
                   </p>
                 </div>
               </div>
