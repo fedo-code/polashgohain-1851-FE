@@ -79,7 +79,7 @@ export default function BookExplorer() {
       )}
 
       {/* Books Grid Container - Centered with equal spacing */}
-      <div className="flex justify-center px-4 mt-12">
+      <div className="flex justify-center px-4 mt-24">
         <div className="w-full max-w-7xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {books.map((book) => (
