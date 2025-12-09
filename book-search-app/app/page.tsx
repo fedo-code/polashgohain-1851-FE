@@ -32,7 +32,7 @@ export default function BookExplorer() {
       const data = await res.json();
       const results = data.docs || [];
       setAllBooks(results);
-      setFilteredBooks(results); // Initially show all results
+      setFilteredBooks(results);
     } catch (err) {
       console.error("Error fetching books:", err);
       setAllBooks([]);
@@ -42,24 +42,25 @@ export default function BookExplorer() {
     }
   };
 
-  // Client-side filtering based on title
-  const handleSearch = (searchText: string) => {
-    setQuery(searchText);
+  // Handle search and filter
+  const handleSearch = (value: string) => {
+    setQuery(value);
     
-    if (!searchText.trim()) {
-      fetchBooks(searchText);
+    if (!value.trim()) {
+      setAllBooks([]);
+      setFilteredBooks([]);
       return;
     }
 
-    // If we have allBooks, filter them client-side
-    if (allBooks.length > 0) {
-      const filtered = allBooks.filter((book) =>
-        book.title.toLowerCase().includes(searchText.toLowerCase())
+    // First search - fetch from API
+    if (allBooks.length === 0) {
+      fetchBooks(value);
+    } else {
+      // Subsequent typing - filter existing results
+      const filtered = allBooks.filter((book: Book) =>
+        book.title.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredBooks(filtered);
-    } else {
-      // First time search - fetch from API
-      fetchBooks(searchText);
     }
   };
 
