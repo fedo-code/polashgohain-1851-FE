@@ -15,7 +15,7 @@ export default function BookExplorer() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch books from API
+  // Fetch books
   const fetchBooks = async (searchText: string) => {
     if (!searchText.trim()) {
       setAllBooks([]);
@@ -42,26 +42,25 @@ export default function BookExplorer() {
     }
   };
 
-  // Handle search and filter
+  // Handle Search
   const handleSearch = (value: string) => {
     setQuery(value);
-    
+
     if (!value.trim()) {
       setAllBooks([]);
       setFilteredBooks([]);
       return;
     }
 
-    // First search - fetch from API
     if (allBooks.length === 0) {
       fetchBooks(value);
-    } else {
-      // Subsequent typing - filter existing results
-      const filtered = allBooks.filter((book: Book) =>
-        book.title.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredBooks(filtered);
+      return;
     }
+
+    const filtered = allBooks.filter((book: Book) =>
+      book.title.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredBooks(filtered);
   };
 
   return (
@@ -70,19 +69,32 @@ export default function BookExplorer() {
       <h1 className="text-4xl font-bold text-center pt-10">Book Explorer</h1>
       <p className="text-gray-600 text-center mt-2">Search books instantly</p>
 
-      {/* Search Bar Container */}
+      {/* GOOGLE-STYLE SEARCH BAR */}
       <div className="flex justify-center mt-12 px-4">
-        <div className="relative w-full max-w-2xl">
+        <div className="w-full max-w-2xl bg-white rounded-full shadow-md border border-gray-300 flex items-center focus-within:ring-2 focus-within:ring-blue-500 transition">
+
+          {/* Icon - Extreme Left */}
+          <span className="pl-5 text-gray-500 text-lg">
+            🔍
+          </span>
+
+          {/* Input */}
           <input
             type="text"
             placeholder="Search books..."
             value={query}
-            onChange={(e) => {
-              handleSearch(e.target.value);
-            }}
-            className="w-full px-5 py-3 pl-11 text-base rounded-xl border border-gray-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition"
+            onChange={(e) => handleSearch(e.target.value)}
+            className="
+              flex-1 py-3 px-4 text-base
+              rounded-full 
+              outline-none 
+              border-none
+              bg-transparent
+              text-gray-900
+            "
           />
-          <span className="absolute left-4 top-3 text-gray-400 text-lg">🔍</span>
+
+          {/* Clear Button */}
           {query && (
             <button
               onClick={() => {
@@ -90,7 +102,7 @@ export default function BookExplorer() {
                 setAllBooks([]);
                 setFilteredBooks([]);
               }}
-              className="absolute right-4 top-3 text-gray-400 hover:text-black text-lg"
+              className="pr-5 text-gray-400 hover:text-red-500 text-xl"
             >
               ✖
             </button>
@@ -100,7 +112,7 @@ export default function BookExplorer() {
 
       {/* Result Count */}
       {query && (
-        <p className="text-center mt-4 text-gray-500">
+        <p className="text-center mt-4 text-gray-500 mb-20">
           Showing {filteredBooks.length} results for "{query}"
         </p>
       )}
@@ -112,42 +124,47 @@ export default function BookExplorer() {
         </p>
       )}
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
-        <p className="text-center mt-8 text-gray-500">
-          Loading...
-        </p>
+        <p className="text-center mt-8 text-gray-500">Loading...</p>
       )}
 
-      {/* Books Grid Container - Centered with equal spacing */}
-      <div className="flex justify-center px-4 mt-24">
+      {/* Books Grid */}
+      <div className="flex justify-center px-4 mt-12">
         <div className="w-full max-w-7xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {filteredBooks.map((book) => (
               <div
                 key={book.key}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:scale-105 hover:border-gray-300 transition-all duration-300 p-4 cursor-pointer"
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 
+                hover:shadow-lg hover:scale-105 hover:border-gray-300 transition-all 
+                duration-300 p-6 cursor-pointer min-h-[180px] flex items-center justify-center"
               >
-                <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {book.title}
-                </h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-gray-400 text-sm">👤</span>
-                  <p className="text-xs text-gray-700 line-clamp-2">
-                    {book.author_name?.join(", ") || "Unknown Author"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-sm">📅</span>
-                  <p className="text-xs text-gray-600">
-                    {book.first_publish_year || "Year not available"}
-                  </p>
+                <div className="w-full max-w-[220px] mx-auto">
+                  <h3 className="text-base font-semibold text-gray-900 mb-6 line-clamp-2">
+                    {book.title}
+                  </h3>
+
+                  <div className="flex items-center gap-2 mb-5">
+                    <span className="text-gray-400 text-sm">👤</span>
+                    <p className="text-xs text-gray-700 line-clamp-2">
+                      {book.author_name?.join(", ") || "Unknown Author"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">📅</span>
+                    <p className="text-xs text-gray-600">
+                      {book.first_publish_year || "Year not available"}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
     </div>
   );
 }
