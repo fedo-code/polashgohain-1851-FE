@@ -129,8 +129,8 @@ export default function BookExplorer() {
           <p className="text-center mt-8 text-gray-500">Loading...</p>
         )}
 
-        {/* Books Grid (ONLY CHANGE: mt-20 added) */}
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+        {/* Books Grid (moved higher with mt-8) */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
             {filteredBooks.map((book) => (
               <div
