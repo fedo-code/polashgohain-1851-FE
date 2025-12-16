@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface Book {
   key: string;
@@ -10,14 +10,16 @@ interface Book {
 }
 
 export default function BookExplorer() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Fetch books
   const fetchBooks = async (searchText: string) => {
     if (!searchText.trim()) {
-      setBooks([]);
+      setAllBooks([]);
+      setFilteredBooks([]);
       return;
     }
 
@@ -28,84 +30,144 @@ export default function BookExplorer() {
         `https://openlibrary.org/search.json?q=${encodeURIComponent(searchText)}`
       );
       const data = await res.json();
-      setBooks(data.docs || []);
+      const results = data.docs || [];
+      setAllBooks(results);
+      setFilteredBooks(results);
     } catch (err) {
       console.error("Error fetching books:", err);
-      setBooks([]);
+      setAllBooks([]);
+      setFilteredBooks([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Search
+  const handleSearch = (value: string) => {
+    setQuery(value);
+
+    if (!value.trim()) {
+      setAllBooks([]);
+      setFilteredBooks([]);
+      return;
+    }
+
+    if (allBooks.length === 0) {
+      fetchBooks(value);
+      return;
+    }
+
+    const filtered = allBooks.filter((book: Book) =>
+      book.title.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredBooks(filtered);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Title */}
-      <h1 className="text-4xl font-bold text-center pt-10">Book Explorer</h1>
-      <p className="text-gray-600 text-center mt-2">Search books instantly</p>
+    <div className="flex justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-7xl pb-20">
 
-      {/* Search Bar Container */}
-      <div className="flex justify-center mt-12 px-4">
-        <div className="relative w-full max-w-2xl">
-          <input
-            type="text"
-            placeholder="Search books..."
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              fetchBooks(e.target.value);
-            }}
-            className="w-full px-5 py-3 pl-11 text-base rounded-xl border border-gray-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition"
-          />
-          <span className="absolute left-4 top-3 text-gray-400 text-lg">🔍</span>
-          {query && (
-            <button
-              onClick={() => {
-                setQuery("");
-                setBooks([]);
-              }}
-              className="absolute right-4 top-3 text-gray-400 hover:text-black text-lg"
-            >
-              ✖
-            </button>
-          )}
+        {/* Title */}
+        <h1 className="text-4xl font-bold text-center pt-10">Book Explorer</h1>
+        <p className="text-gray-600 text-center mt-2">Search books instantly</p>
+
+        {/* SEARCH BAR WITH BIGGER GAP */}
+        <div className="flex justify-center mt-14 px-4">
+          <div className="w-full max-w-2xl bg-white rounded-full shadow-md border border-gray-300 flex items-center focus-within:ring-2 focus-within:ring-blue-500 transition">
+
+            {/* Search Icon */}
+            <span className="pl-5 text-gray-500 text-lg">🔍</span>
+
+            {/* Input */}
+            <input
+              type="text"
+              placeholder="Search books..."
+              value={query}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="
+                flex-1 py-3 px-4 text-base
+                rounded-full 
+                outline-none 
+                border-none
+                bg-transparent
+                text-gray-900
+              "
+            />
+
+            {/* Clear Button */}
+            {query && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  setAllBooks([]);
+                  setFilteredBooks([]);
+                }}
+                className="pr-5 text-gray-400 hover:text-red-500 text-xl"
+              >
+                ✖
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Result Count */}
-      {query && (
-        <p className="text-center mt-4 text-gray-500">
-          Showing {books.length} results for "{query}"
-        </p>
-      )}
+        {/* Result Count */}
+        {query && (
+          <p className="text-center mt-4 text-gray-500 mb-8">
+            Showing {filteredBooks.length} results for "{query}"
+          </p>
+        )}
 
-      {/* Books Grid Container - Centered with equal spacing */}
-      <div className="flex justify-center px-4 mt-12">
-        <div className="w-full max-w-7xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {books.map((book) => (
+        {/* Empty State */}
+        {query && filteredBooks.length === 0 && !loading && (
+          <p className="text-center mt-8 text-gray-500">
+            No books found. Try another title.
+          </p>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <p className="text-center mt-8 text-gray-500">Loading...</p>
+        )}
+
+        {/* Books Grid (moved higher with mt-8) */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+            {filteredBooks.map((book) => (
               <div
                 key={book.key}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg hover:scale-105 hover:border-gray-300 transition-all duration-300 p-4 cursor-pointer"
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 
+                hover:shadow-lg hover:scale-105 hover:border-gray-300 transition-all 
+                duration-300 p-6 cursor-pointer min-h-[180px] flex items-center justify-center w-full max-w-[260px]"
               >
-                <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {book.title}
-                </h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-gray-400 text-sm">👤</span>
-                  <p className="text-xs text-gray-700 line-clamp-2">
-                    {book.author_name?.join(", ") || "Unknown Author"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-400 text-sm">📅</span>
-                  <p className="text-xs text-gray-600">
-                    {book.first_publish_year || "Not available"}
-                  </p>
+                <div className="w-full max-w-[220px] mx-auto">
+
+                  {/* Title */}
+                  <h3 className="text-base font-semibold text-gray-900 mb-6 line-clamp-2">
+                    {book.title}
+                  </h3>
+
+                  {/* Authors */}
+                  <div className="flex items-center gap-2 mb-5">
+                    <span className="text-gray-400 text-sm">👤</span>
+                    <p className="text-xs text-gray-700 line-clamp-2">
+                      {book.author_name?.join(", ") || "Unknown Author"}
+                    </p>
+                  </div>
+
+                  {/* Year */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">📅</span>
+                    <p className="text-xs text-gray-600">
+                      {book.first_publish_year || "Year not available"}
+                    </p>
+                  </div>
+
                 </div>
               </div>
             ))}
           </div>
         </div>
+
       </div>
     </div>
   );
